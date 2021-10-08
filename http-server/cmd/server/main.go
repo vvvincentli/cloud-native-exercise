@@ -1,7 +1,7 @@
 package main
 
 import (
-	"cloud-native-exercise/http-server/routers"
+	"cloud-native-exercise/http-server/middleware"
 	"fmt"
 	"net/http"
 	"os"
@@ -27,7 +27,7 @@ func main() {
 func hostServer(addr, port string, errs chan error) {
 	server := http.Server{
 		Addr:    fmt.Sprintf("%s:%s", addr, port),
-		Handler: routers.RouterBinding(),
+		Handler: middleware.RouterBinding(),
 	}
 	go func(server http.Server, err chan error) {
 		err <- server.ListenAndServe()
