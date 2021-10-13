@@ -30,6 +30,7 @@ func hostServer(addr, port string, errs chan error) {
 		Handler: middleware.RouterBinding(),
 	}
 	go func(server http.Server, err chan error) {
+		fmt.Println("server started.")
 		err <- server.ListenAndServe()
 	}(server, errs)
 

@@ -1,0 +1,31 @@
+#多阶段构建，缩小镜像体积，减少镜像层次，降低源代码泄漏风险
+#第一阶段，基于golang基础镜像，构建二进制包
+FROM golang:1.16-alpine as builder
+
+
+WORKDIR /go/src/cloud-native-exercise
+COPY . /go/src/cloud-native-exercise
+
+ENV CGO_ENABLED = 0
+ENV GOOS linux
+
+#go build构建二进制包
+RUN GO111MODULE=on go build -v -o /go/bin/http-server http-server/cmd/server/main.go
+
+#第二阶段，构建镜像
+#golang的二进制包可以直接运行，所以可以基于alpine基础镜像构建
+FROM alpine:3.14
+
+WORKDIR /go/bin
+
+RUN mkdir /etc/http-server
+
+#处理时区的问题
+RUN apk add -U tzdata
+RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+RUN apk del tzdata
+
+COPY --from=builder /go/bin /go/bin
+
+#运行二进制文件，ENTRYPOINT or CMD
+CMD ["/go/bin/http-server"]
