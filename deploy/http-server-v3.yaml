@@ -1,0 +1,169 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: http-server
+  name: http-server
+  namespace: demo
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: http-server
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: ConfigMap
+data:
+  appconfig.yaml: |
+    app:
+      host: 0.0.0.0
+      port: 8080
+
+    log:
+      level: debug
+      path: /var/log/http-server
+      file_name: log.log
+      max_age: 259200         #日志保存时间，默认存放30天，以秒为单位
+      rotation_time: 86400
+metadata:
+  labels:
+    app: http-server
+  name: http-server-config
+  namespace: demo
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app: http-server
+  name: http-server
+  namespace: demo
+spec:
+  rules:
+    - host: server.vvvincentli.com
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: http-server
+                port:
+                  number: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    keel.sh/pollSchedule: '@every 30m'
+  labels:
+    app: http-server
+    keel.sh/approvals: "1"
+    keel.sh/policy: patch
+    keel.sh/trigger: poll
+  name: http-server
+  namespace: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: http-server
+  template:
+    metadata:
+      labels:
+        app: http-server
+    spec:
+      containers:
+        - image: vvvincentli/http-server:1.0.9
+          imagePullPolicy: IfNotPresent
+          name: http-server
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          env:
+            - name: app-config
+              value: /etc/http-server/appconfig.yaml
+          ##资源限制
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 64m
+              memory: 64Mi
+          ##就绪探测
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              httpHeaders:
+                - name: x-user
+                  value: readinessProbe
+            initialDelaySeconds: 5
+            periodSeconds: 2
+            timeoutSeconds: 2
+            successThreshold: 1
+          ##探活
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              httpHeaders:
+                - name: x-user
+                  value: livenessProbe
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          ##优雅启动/终止
+          lifecycle:
+            ##启动
+            postStart:
+              httpGet:
+                path: /healthz
+                port: 8080
+                host: localhost
+                scheme: HTTP
+            ##终止
+            preStop:
+              exec:
+                command:
+                  - sh
+                  - c
+                  - echo "Stopping container now...">/proc/1/fd/1
+          volumeMounts:
+            - mountPath: /etc/http-server
+              name: app-config
+            - mountPath: /etc/localtime
+              name: host-time
+      initContainers:
+        - command:
+            - /bin/sh
+            - -c
+            - until nc -zv mysql.demo.svc.cluster.local 3306 -w1; do echo 'waiting for mariadb';
+              sleep 1; done
+          env:
+            - name: 3306
+              value: mariadb-0.mariadb.demo.svc.cluster.local
+            - name: 3306
+              value: "3306"
+          image: busybox:latest
+          name: wait-for-mariadb
+      volumes:
+        - hostPath:
+            path: /etc/localtime
+            type: ""
+          name: host-time
+        - configMap:
+            defaultMode: 420
+            name: http-server-config
+          name: app-config
+
+

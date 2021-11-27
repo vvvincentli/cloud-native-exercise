@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"cloud-native-exercise/http-server/controller"
+	"cloud-native-exercise/http-server/pkg/controller"
 	"fmt"
 	"net/http"
 	"time"
