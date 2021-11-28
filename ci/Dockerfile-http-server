@@ -27,5 +27,7 @@ RUN apk del tzdata
 
 COPY --from=builder /go/bin /go/bin
 
+ENV app-config=/etc/http-server/appconfig.yaml
+
 #运行二进制文件，ENTRYPOINT or CMD
 CMD ["/go/bin/http-server"]

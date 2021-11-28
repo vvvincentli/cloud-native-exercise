@@ -48,6 +48,7 @@ metadata:
 spec:
   rules:
     - host: server.vvvincentli.com
+      #TODO:SSL保障通信安全
       http:
         paths:
           - pathType: Prefix
@@ -72,7 +73,7 @@ metadata:
   name: http-server
   namespace: demo
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: http-server
@@ -82,7 +83,7 @@ spec:
         app: http-server
     spec:
       containers:
-        - image: vvvincentli/http-server:1.0.9
+        - image: vvvincentli/http-server:1.0.10
           imagePullPolicy: IfNotPresent
           name: http-server
           ports:
@@ -100,6 +101,7 @@ spec:
             requests:
               cpu: 64m
               memory: 64Mi
+          ##TODO:QoS
           ##就绪探测
           readinessProbe:
             httpGet:
@@ -129,7 +131,6 @@ spec:
               httpGet:
                 path: /healthz
                 port: 8080
-                host: localhost
                 scheme: HTTP
             ##终止
             preStop:
@@ -141,18 +142,20 @@ spec:
           volumeMounts:
             - mountPath: /etc/http-server
               name: app-config
+            #日志采集
             - mountPath: /etc/localtime
               name: host-time
+      ##initContainers，检查中间件是否已启动
       initContainers:
         - command:
             - /bin/sh
             - -c
-            - until nc -zv mysql.demo.svc.cluster.local 3306 -w1; do echo 'waiting for mariadb';
+            - until nc -zv $MYSQL_HOST $MYSQL_PORT -w1; do echo 'waiting for mysql';
               sleep 1; done
           env:
-            - name: 3306
+            - name: MYSQL_HOST
               value: mariadb-0.mariadb.demo.svc.cluster.local
-            - name: 3306
+            - name: MYSQL_PORT
               value: "3306"
           image: busybox:latest
           name: wait-for-mariadb
