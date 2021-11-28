@@ -94,6 +94,10 @@ spec:
             - name: app-config
               value: /etc/http-server/appconfig.yaml
           ##资源限制
+          ##QoS遵循如下规则：
+          ##    BestEffort, 不申明limits和requests；
+          ##    Burstable, 当申明limits和requests的cpu或内存时；
+          ##    Guaranteed, 把limits和requests的cpu、内存设置成相同的值；
           resources:
             limits:
               cpu: 500m
@@ -101,7 +105,6 @@ spec:
             requests:
               cpu: 64m
               memory: 64Mi
-          ##TODO:QoS
           ##就绪探测
           readinessProbe:
             httpGet:
