@@ -105,6 +105,16 @@ spec:
             requests:
               cpu: 64m
               memory: 64Mi
+          ##保护慢启动容器
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+              httpHeaders:
+                - name: x-user
+                  value: livenessProbe
+            initialDelaySeconds: 3
+            periodSeconds: 3
           ##就绪探测
           readinessProbe:
             httpGet:
@@ -117,6 +127,7 @@ spec:
             periodSeconds: 2
             timeoutSeconds: 2
             successThreshold: 1
+          ##非集群内部的依赖组件，可用ReadinessGates配置额外的检查
           ##探活
           livenessProbe:
             httpGet:
