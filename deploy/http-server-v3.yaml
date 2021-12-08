@@ -49,7 +49,7 @@ data:
   ###openssl req -x509 -new -nodes -sha512 -days 3650 -subj "/C=CN/ST=Guangdong/L=Shenzhen/O=vvvincentli/OU=Personal/CN=server.vvvincentli.com" -key ca.key -out ca.crt
   ###openssl genrsa -out server.vvvincentli.com.key 4096
   ###openssl req -sha512 -new -subj "/C=CN/ST=Guangdong/L=Shenzhen/O=vvvincentli/OU=Personal/CN=server.vvvincentli.com" -key server.vvvincentli.com.key -out server.vvvincentli.com.csr
-  ###kubectl create secret tls demo-tls --key=="ca.key" --cert="cat.cet"
+  ###kubectl create secret tls demo-tls --key=="ca.key" --cert="ca.cet"
   ###kubectl get secret demo-tls -oyaml
   tls.crt: "base 64 cert"
   tls.key: "base 64 key"
