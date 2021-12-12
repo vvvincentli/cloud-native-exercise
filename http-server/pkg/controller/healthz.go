@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"os"
 	"time"
@@ -12,6 +13,7 @@ func Healthz(w http.ResponseWriter, r *http.Request) {
 	for k, _ := range r.Header {
 		w.Header().Set(k, r.Header.Get(k))
 	}
+	time.Sleep(time.Duration(rand.Intn(3) * int(time.Second)))
 	w.Header().Set("VERSION", os.Getenv("VERSION"))
 	w.Write([]byte(fmt.Sprintf("i'm alive. [%s]", time.Now().Format(time.RFC3339))))
 }
