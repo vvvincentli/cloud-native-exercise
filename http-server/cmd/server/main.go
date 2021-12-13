@@ -3,6 +3,7 @@ package main
 import (
 	"cloud-native-exercise/http-server/internal/configs"
 	"cloud-native-exercise/http-server/middleware"
+	"cloud-native-exercise/http-server/middleware/metrics"
 	"flag"
 	"fmt"
 	"log"
@@ -37,6 +38,12 @@ func main() {
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 		errs <- fmt.Errorf("%s", <-c)
 	}()
+
+	err := metrics.Register()
+	if err != nil {
+		errs <- err
+	}
+
 	hostServer(c.App.Host, c.App.Port, errs)
 	//f, ferr := os.Create("/tmp/http-server")
 	//if ferr != nil {

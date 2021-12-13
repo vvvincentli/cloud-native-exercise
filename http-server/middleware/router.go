@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // router binding
@@ -12,6 +14,7 @@ func RouterBinding() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", withLogging(controller.Healthz))
 	mux.HandleFunc("/error", withLogging(controller.Error))
+	mux.Handle("/metrics", promhttp.Handler)
 	return mux
 }
 

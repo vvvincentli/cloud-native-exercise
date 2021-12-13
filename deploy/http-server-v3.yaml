@@ -88,6 +88,8 @@ kind: Deployment
 metadata:
   annotations:
     keel.sh/pollSchedule: '@every 30m'
+    prometheus.io/port: http-metrics
+    prometheus.io/scrap: "true"
   labels:
     app: http-server
     keel.sh/approvals: "1"
