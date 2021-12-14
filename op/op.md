@@ -144,10 +144,41 @@ func main() {
 
 ## 2.2.Pod申明上报指标端口和地址
 
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    keel.sh/pollSchedule: '@every 30m'
+    prometheus.io/port: http-metrics
+    prometheus.io/scrap: "true"
+  labels:
+    app: http-server
+    keel.sh/approvals: "1"
+    keel.sh/policy: patch
+    keel.sh/trigger: poll
+  name: http-server
+  namespace: demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: http-server
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+      labels:
+        app: http-server
 
+#其他配置不变
+```
 
 
 # 3.将 HTTPServer 部署至测试集群，并完成 Prometheus 配置
+> 重新打镜像，部署
+
 
 # 4.从 Promethus 界面中查询延时指标数据
 
